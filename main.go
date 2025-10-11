@@ -3,12 +3,15 @@ package main
 import (
 	"log"
 	"net/http"
+
+	"github.com/aliBazrkar/go-chatapp/chat"
+	"github.com/aliBazrkar/go-chatapp/handlers"
 )
 
 func main() {
-	// hub := NewHub()
-	// go hub.run()
+	hub := chat.NewHub()
+	go hub.Run()
 
-	setupRoutes()
+	handlers.SetupRoutes()
 	log.Fatal(http.ListenAndServe(":3000", nil))
 }
