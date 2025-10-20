@@ -9,7 +9,11 @@ import (
 	"gorm.io/gorm/logger"
 )
 
-func Initializer(dbPath string) (*gorm.DB, error) {
+type Database struct {
+	Gorm *gorm.DB
+}
+
+func Initializer(dbPath string) (*Database, error) {
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -35,19 +39,19 @@ func Initializer(dbPath string) (*gorm.DB, error) {
 		return nil, fmt.Errorf("failed to set synchronous mode: %w", err)
 	}
 
-	sqlDB.SetMaxOpenConns(10)
-	sqlDB.SetMaxIdleConns(5)
-	sqlDB.SetConnMaxLifetime(time.Hour)
+	sqlDB.SetMaxOpenConns(32)
+	sqlDB.SetMaxIdleConns(4)
+	sqlDB.SetConnMaxLifetime(5 * time.Minute)
 
 	_, err = sqlDB.Exec("PRAGMA busy_timeout=5000;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 	}
 
-	err = db.AutoMigrate(&UserDB{}, &HubDB{}, &MessageDB{})
+	err = db.AutoMigrate(&User{}, &Hub{}, &Message{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	return db, nil
+	return &Database{Gorm: db}, nil
 }

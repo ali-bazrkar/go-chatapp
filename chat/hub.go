@@ -3,6 +3,8 @@ package chat
 import (
 	"encoding/json"
 	"log"
+
+	"gorm.io/gorm"
 )
 
 type Hub struct {
@@ -21,7 +23,7 @@ func NewHub() *Hub {
 	}
 }
 
-func (h *Hub) Run() {
+func (h *Hub) Run(dbConn *gorm.DB) {
 	for {
 		select {
 		case client := <-h.Register:

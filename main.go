@@ -16,14 +16,14 @@ func main() {
 		log.Fatalf("Database Initializing Failed: %v\n", err)
 	}
 	defer func() {
-		sqlDB, _ := dbConn.DB()
+		sqlDB, _ := dbConn.Gorm.DB()
 		sqlDB.Close()
 	}()
 
 	hub := chat.NewHub()
-	go hub.Run()
+	go hub.Run(dbConn.Gorm)
 
 	mux := http.NewServeMux()
-	handlers.Setup(hub, mux)
+	handlers.Setup(dbConn, hub, mux)
 	log.Fatal(http.ListenAndServe(":3000", mux))
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/aliBazrkar/go-chatapp/chat"
+	"github.com/aliBazrkar/go-chatapp/db"
 	"github.com/gorilla/websocket"
 )
 
@@ -24,11 +25,22 @@ var upgrader = websocket.Upgrader{
 // this is a design choice
 // the reason why hub is passed through function
 // is allowing scaling for multi-hub creation later
-func Setup(hub *chat.Hub, mux *http.ServeMux) {
+func Setup(dbConn *db.Database, hub *chat.Hub, mux *http.ServeMux) {
+
 	http.HandleFunc("/chat", chatEndpoint)
-	http.HandleFunc("/login", loginEndpoint)
-	http.HandleFunc("/register", registerEndpoint)
-	http.HandleFunc("/logout", logoutEndpoint)
+
+	http.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		loginEndpoint(dbConn, w, r)
+	})
+
+	http.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		registerEndpoint(dbConn, w, r)
+	})
+
+	http.HandleFunc("/logout", func(w http.ResponseWriter, r *http.Request) {
+		logoutEndpoint(dbConn, w, r)
+	})
+
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
 		wsEndpoint(hub, w, r)
 	})
@@ -50,11 +62,11 @@ func chatEndpoint(w http.ResponseWriter, r *http.Request) {
 	http.ServeFile(w, r, "templates/chat.html")
 }
 
-func registerEndpoint(w http.ResponseWriter, r *http.Request) {}
+func registerEndpoint(db *db.Database, w http.ResponseWriter, r *http.Request) {}
 
-func loginEndpoint(w http.ResponseWriter, r *http.Request) {}
+func loginEndpoint(db *db.Database, w http.ResponseWriter, r *http.Request) {}
 
-func logoutEndpoint(w http.ResponseWriter, r *http.Request) {}
+func logoutEndpoint(db *db.Database, w http.ResponseWriter, r *http.Request) {}
 
 func wsEndpoint(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
@@ -67,7 +79,7 @@ func wsEndpoint(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
 	var idtemp *uint = &id
 	*idtemp = *idtemp + 1
 
-	client := chat.NewClient(*idtemp, hub, conn)
+	client := chat.NewClient(string(rune(*idtemp)), hub, conn)
 	hub.Register <- client
 
 	go client.WritePump()

@@ -9,7 +9,7 @@ import (
 )
 
 type Client struct {
-	username uint
+	username string
 	hub      *Hub
 	conn     *websocket.Conn
 	send     chan []byte
@@ -25,7 +25,7 @@ const (
 	maxMessageSize = 8 * 1024
 )
 
-func NewClient(username uint, hub *Hub, conn *websocket.Conn) *Client {
+func NewClient(username string, hub *Hub, conn *websocket.Conn) *Client {
 	return &Client{
 		username: username,
 		hub:      hub,
@@ -66,7 +66,7 @@ func (c *Client) ReadPump() {
 			log.Printf("Username: %v — Unmarshal Error: %v\n", c.username, err)
 		}
 
-		c.hub.broadcast <- &Message{Username: c.username, Content: msg.Content, Time: time.Now()}
+		c.hub.broadcast <- &Message{Username: c.username, Content: msg.Content, Timestamp: time.Now()}
 	}
 }
 
