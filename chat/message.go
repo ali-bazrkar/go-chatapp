@@ -1,11 +1,11 @@
 package chat
 
-import "time"
+import (
+	"time"
+)
 
 type Message struct {
-	ID       string // UUID, primary key
-	UserID   string // FK to User
-	Username string // cached username for easy retrieval
-	Text     string
-	SentAt   time.Time
+	Username  uint      `json:"username"`
+	Content   string    `json:"content"`
+	Timestamp time.Time `json:"timestamp"`
 }

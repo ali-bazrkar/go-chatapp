@@ -1,20 +1,23 @@
 package chat
 
-import "log"
+import (
+	"encoding/json"
+	"log"
+)
 
 type Hub struct {
-	Clients    map[*Client]bool
+	clients    map[*Client]bool
+	broadcast  chan *Message
 	Register   chan *Client
-	Unregister chan *Client
-	Broadcast  chan []byte
+	unregister chan *Client
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		Clients:    make(map[*Client]bool),
+		clients:    make(map[*Client]bool),
+		broadcast:  make(chan *Message),
 		Register:   make(chan *Client),
-		Unregister: make(chan *Client),
-		Broadcast:  make(chan []byte),
+		unregister: make(chan *Client),
 	}
 }
 
@@ -22,27 +25,34 @@ func (h *Hub) Run() {
 	for {
 		select {
 		case client := <-h.Register:
-			h.Clients[client] = true
-			log.Println(client.Username, "connected")
+			h.clients[client] = true
+			log.Printf("%v connected", client.username)
 
-		case client := <-h.Unregister:
-			if _, ok := h.Clients[client]; ok {
-				delete(h.Clients, client)
-				close(client.Send)
-				log.Println(client.Username, "disconnected")
+		case client := <-h.unregister:
+			if _, ok := h.clients[client]; ok {
+				delete(h.clients, client)
+				close(client.send)
+				log.Printf("%v disconnected", client.username)
 			}
 
-		case msg := <-h.Broadcast:
+		case data := <-h.broadcast:
 
-			for c := range h.Clients {
+			msg, err := json.Marshal(data)
+			if err != nil {
+				log.Println("Marshal Error:", err)
+				continue
+			}
+
+			for client := range h.clients {
 				select {
-				case c.Send <- msg:
+				case client.send <- msg:
 				default:
-					close(c.Send)
-					delete(h.Clients, c)
+					close(client.send)
+					delete(h.clients, client)
 				}
 
 				// select {} -> TODO: DB CHAN STORAGE
+
 			}
 		}
 	}
