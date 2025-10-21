@@ -6,21 +6,12 @@ import (
 
 	"github.com/aliBazrkar/go-chatapp/chat"
 	"github.com/aliBazrkar/go-chatapp/db"
-	"github.com/gorilla/websocket"
 )
 
 // TODO
 // this is a temporary holder for username
 // as soon as auth and db are set it will update
 var id uint = 0
-
-var upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // TODO: in production i should put domain name here
-	},
-	ReadBufferSize:  1024 * 4,
-	WriteBufferSize: 1024 * 8,
-}
 
 // this is a design choice
 // the reason why hub is passed through function
@@ -47,18 +38,10 @@ func Setup(dbConn *db.Database, hub *chat.Hub, mux *http.ServeMux) {
 }
 
 func chatEndpoint(w http.ResponseWriter, r *http.Request) {
-	if r.URL.Path != "/chat" {
-		status := http.StatusNotFound
-		http.Error(w, "not found", status)
-		return
-	}
-
 	if r.Method != http.MethodGet {
-		status := http.StatusNotFound
-		http.Error(w, "Invalid Method", status)
+		http.Error(w, "Invalid Method", http.StatusMethodNotAllowed)
 		return
 	}
-
 	http.ServeFile(w, r, "templates/chat.html")
 }
 
@@ -69,7 +52,7 @@ func loginEndpoint(db *db.Database, w http.ResponseWriter, r *http.Request) {}
 func logoutEndpoint(db *db.Database, w http.ResponseWriter, r *http.Request) {}
 
 func wsEndpoint(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := chat.Upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Println("Upgrade Error:", err)
 		return
@@ -79,7 +62,7 @@ func wsEndpoint(hub *chat.Hub, w http.ResponseWriter, r *http.Request) {
 	var idtemp *uint = &id
 	*idtemp = *idtemp + 1
 
-	client := chat.NewClient(string(rune(*idtemp)), hub, conn)
+	client := chat.NewClient(string(rune(*idtemp)), hub, conn) // fix
 	hub.Register <- client
 
 	go client.WritePump()

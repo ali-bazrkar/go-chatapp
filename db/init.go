@@ -10,10 +10,15 @@ import (
 )
 
 type Database struct {
-	Gorm *gorm.DB
+	Gorm       *gorm.DB
+	WriteQueue chan *Message
 }
 
-func Initializer(dbPath string) (*Database, error) {
+func Initializer(dbPath string, bufferSize uint16) (*Database, error) {
+
+	// remove Logger setting if SQL query logs are bothering you
+	// i left it open to see transaction flows and evaluate easier.
+
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
@@ -31,9 +36,6 @@ func Initializer(dbPath string) (*Database, error) {
 		return nil, fmt.Errorf("failed to enable WAL mode: %w", err)
 	}
 
-	// It's a balance between safety and performance
-	// still safe in WAL mode, but faster than FULL
-	// for safer exprience consider switching to FULL
 	_, err = sqlDB.Exec("PRAGMA synchronous=NORMAL;")
 	if err != nil {
 		return nil, fmt.Errorf("failed to set synchronous mode: %w", err)
@@ -53,5 +55,5 @@ func Initializer(dbPath string) (*Database, error) {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
 
-	return &Database{Gorm: db}, nil
+	return &Database{Gorm: db, WriteQueue: make(chan *Message, bufferSize)}, nil
 }

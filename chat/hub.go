@@ -4,31 +4,41 @@ import (
 	"encoding/json"
 	"log"
 
-	"gorm.io/gorm"
+	"github.com/aliBazrkar/go-chatapp/db"
+	"github.com/aliBazrkar/go-chatapp/model"
 )
 
 type Hub struct {
+	id         uint16
+	name       string
+	address    string
 	clients    map[*Client]bool
-	broadcast  chan *Message
+	broadcast  chan *model.Message
 	Register   chan *Client
 	unregister chan *Client
+	limit      uint16
 }
 
-func NewHub() *Hub {
+func NewHub(name string, address string, limit uint16) *Hub {
 	return &Hub{
+		id:         1,
+		name:       name,
+		address:    address,
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan *Message),
+		broadcast:  make(chan *model.Message),
 		Register:   make(chan *Client),
 		unregister: make(chan *Client),
+		limit:      limit,
 	}
 }
 
-func (h *Hub) Run(dbConn *gorm.DB) {
+func (h *Hub) Run(dbConn *db.Database) {
 	for {
 		select {
 		case client := <-h.Register:
 			h.clients[client] = true
 			log.Printf("%v connected", client.username)
+			// message retrievement ?
 
 		case client := <-h.unregister:
 			if _, ok := h.clients[client]; ok {
