@@ -16,7 +16,7 @@ func (db *Database) MessageWriter() {
 	}
 }
 
-func (db *Database) FetchAfter(hubID int, afterTime time.Time) ([]*model.Message, error) {
+func (db *Database) FetchAfter(hubID uint16, afterTime time.Time) ([]*model.Message, error) {
 	var messages []*model.Message
 	return messages,
 		db.Gorm.
@@ -28,7 +28,7 @@ func (db *Database) FetchAfter(hubID int, afterTime time.Time) ([]*model.Message
 			Scan(&messages).Error
 }
 
-func (db *Database) FetchRecent(hubID int, limit int) ([]*model.Message, error) {
+func (db *Database) FetchRecent(hubID uint16, limit int) ([]*model.Message, error) {
 
 	var messages []*model.Message
 
@@ -54,8 +54,8 @@ func (db *Database) CreateHub(name string, address string) (*Hub, error) {
 	return &hub, db.Gorm.Create(&hub).Error
 }
 
-func (db *Database) CreateUser(username string) (*User, error) {
-	var user = User{Username: username}
+func (db *Database) CreateUser(username string, password string) (*User, error) {
+	var user = User{Username: username, Password: password}
 	return &user, db.Gorm.Create(&user).Error
 }
 
@@ -98,6 +98,33 @@ func (db *Database) GetHub(field string, value any) (*Hub, error) {
 			Model(&Hub{}).
 			Where(fmt.Sprintf("%s = ?", field), value).
 			First(&hub).Error
+}
+
+func (db *Database) CreateToken(userID uint32, sessionToken, csrfToken string, expiresAt time.Time) (*Token, error) {
+	token := &Token{
+		UserID:       userID,
+		SessionToken: sessionToken,
+		CSRFToken:    csrfToken,
+		ExpiresAt:    expiresAt,
+	}
+	return token, db.Gorm.Create(token).Error
+}
+
+func (db *Database) GetTokenBySession(sessionToken string) (*Token, error) {
+	var token Token
+	err := db.Gorm.
+		Preload("User").
+		Where("session_token = ?", sessionToken).
+		First(&token).Error
+	return &token, err
+}
+
+func (db *Database) DeleteToken(sessionToken string) error {
+	return db.Gorm.Where("session_token = ?", sessionToken).Delete(&Token{}).Error
+}
+
+func (db *Database) CleanupExpiredTokens() error {
+	return db.Gorm.Where("expires_at < ?", time.Now()).Delete(&Token{}).Error
 }
 
 // Save() updates all fields, Updates() can update specific fields

@@ -50,7 +50,7 @@ func Initializer(dbPath string, bufferSize uint16) (*Database, error) {
 		return nil, fmt.Errorf("failed to set busy timeout: %w", err)
 	}
 
-	err = db.AutoMigrate(&User{}, &Hub{}, &Message{})
+	err = db.AutoMigrate(&User{}, &Hub{}, &Message{}, &Token{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to migrate database: %w", err)
 	}
