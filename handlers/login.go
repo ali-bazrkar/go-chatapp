@@ -8,11 +8,9 @@ import (
 	"github.com/aliBazrkar/go-chatapp/auth"
 )
 
-// Login authenticates a user and creates a session
-func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
-
+func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
@@ -22,37 +20,36 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		http.Error(w, "Invalid Request Body", http.StatusBadRequest)
 		return
 	}
 
-	// Validate input format
 	if !auth.IsUsernameValid(req.Username) || !auth.IsPasswordValid(req.Password) {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid Username/Password", http.StatusNotAcceptable)
 		return
 	}
 
 	user, err := h.db.GetUserByUsername(req.Username)
 	if err != nil {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid Username/Password", http.StatusNotAcceptable)
 		return
 	}
 
 	if !auth.CheckPassword(req.Password, user.Password) {
-		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
+		http.Error(w, "Invalid Username/Password", http.StatusNotAcceptable)
 		return
 	}
 
 	sessionToken, csrfToken, expiresAt, err := h.sm.CreateSession(user.ID, auth.TokenLength)
 	if err != nil {
 		log.Printf("Error creating session: %v", err)
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 
 	auth.SetSessionCookie(w, sessionToken, expiresAt)
 
-	respondJSON(w, map[string]interface{}{
+	respondJSON(w, map[string]any{
 		"message":    "Logged in successfully",
 		"username":   user.Username,
 		"csrf_token": csrfToken,

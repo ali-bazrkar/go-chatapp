@@ -18,8 +18,9 @@ var (
 
 const (
 	SessionCookieName = "session_token"
+	CSRFTokenName     = "csrf_token"
 	CSRFHeaderName    = "X-CSRF-Token"
-	SessionDuration   = 60 * time.Minute
+	SessionDuration   = 2 * time.Minute // change later
 	TokenLength       = 32
 	Secure            = false // fix -> True later
 )
@@ -47,7 +48,6 @@ func (sm *SessionManager) CreateSession(userID uint32, length int) (sessionToken
 
 func (sm *SessionManager) ValidateSession(r *http.Request) (*db.User, error) {
 
-	// here we get both session token and CSRF token values from browser header
 	cookie, err := r.Cookie(SessionCookieName)
 	if err != nil || cookie.Value == "" {
 		return nil, ErrInvalidSession
@@ -97,6 +97,7 @@ func SetSessionCookie(w http.ResponseWriter, sessionToken string, expiresAt time
 		HttpOnly: true,
 		Secure:   Secure,
 		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
 	})
 }
 
@@ -105,8 +106,9 @@ func ClearSessionCookie(w http.ResponseWriter) {
 		Name:     SessionCookieName,
 		Value:    "",
 		Expires:  time.Unix(0, 0),
-		HttpOnly: true,
+		HttpOnly: false,
 		Secure:   Secure,
 		SameSite: http.SameSiteStrictMode,
+		Path:     "/",
 	})
 }

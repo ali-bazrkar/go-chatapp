@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aliBazrkar/go-chatapp/model"
@@ -55,7 +56,7 @@ func (db *Database) CreateHub(name string, address string) (*Hub, error) {
 }
 
 func (db *Database) CreateUser(username string, password string) (*User, error) {
-	var user = User{Username: username, Password: password}
+	var user = User{Username: strings.ToLower(username), Password: password}
 	return &user, db.Gorm.Create(&user).Error
 }
 
@@ -64,7 +65,7 @@ func (db *Database) UserExists(username string) (bool, error) {
 	return count > 0,
 		db.Gorm.
 			Model(&User{}).
-			Where("username = ?", username).
+			Where("username = ?", strings.ToLower(username)).
 			Count(&count).Error
 }
 
@@ -85,7 +86,7 @@ func (db *Database) GetUserByUsername(username string) (*User, error) {
 		db.Gorm.
 			Model(&User{}).
 			Select("id, username, password").
-			Where("username = ?", username).
+			Where("username = ?", strings.ToLower(username)).
 			First(&user).Error
 }
 
@@ -127,4 +128,5 @@ func (db *Database) CleanupExpiredTokens() error {
 	return db.Gorm.Where("expires_at < ?", time.Now()).Delete(&Token{}).Error
 }
 
+// DEV Reminder:
 // Save() updates all fields, Updates() can update specific fields
