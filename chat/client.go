@@ -122,20 +122,3 @@ func (c *Client) WritePump() {
 		}
 	}
 }
-
-// ticker := time.NewTicker(1 * time.Minute)
-// defer ticker.Stop()
-
-// for {
-//     select {
-//     case <-ticker.C:
-//         if tokenExpired(client.UserToken) {
-//             client.Conn.WriteMessage(websocket.CloseMessage, []byte("token expired"))
-//             client.Hub.Unregister <- client
-//             client.Conn.Close()
-//             return
-//         }
-//     case msg := <-client.Send:
-//         ...
-//     }
-// }

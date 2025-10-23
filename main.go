@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -76,14 +75,14 @@ func InitializeHub(name string, address string, dbConn *db.Database) *db.Hub {
 			log.Println("Can't get existing hub:", err)
 			return nil
 		}
-		fmt.Println("Hub already exists:", hub.Name)
+		log.Println("Hub already exists:", hub.Name)
 	} else {
 		hub, err = dbConn.CreateHub(name, address)
 		if err != nil {
 			log.Println("Error creating hub:", err)
 			return nil
 		}
-		fmt.Println("Hub created:", hub.Name)
+		log.Println("Hub created:", hub.Name)
 	}
 
 	return hub

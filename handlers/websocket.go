@@ -9,7 +9,7 @@ import (
 	"github.com/aliBazrkar/go-chatapp/chat"
 )
 
-func (h *Handler) WebSocket(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) webSocket(w http.ResponseWriter, r *http.Request) {
 
 	user, ok := auth.GetUserFromContext(r)
 	if !ok {

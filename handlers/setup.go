@@ -24,11 +24,20 @@ func NewHandler(sm *auth.SessionManager, hub *chat.Hub, database *db.Database) *
 }
 
 func (h *Handler) Setup(mux *http.ServeMux) {
-	mux.HandleFunc("/login", h.Login)
-	mux.HandleFunc("/register", h.Register)
-	mux.HandleFunc("/chat", h.ChatPage)
-	mux.Handle("/logout", h.sm.Middleware(http.HandlerFunc(h.Logout)))
-	mux.Handle("/ws", h.sm.Middleware(http.HandlerFunc(h.WebSocket)))
+
+	mux.HandleFunc("/", h.serveApp)
+
+	mux.HandleFunc("/api/login", h.login)
+	mux.HandleFunc("/api/register", h.register)
+	mux.HandleFunc("/api/chat", h.chatApp)
+
+	mux.Handle("/api/logout", h.sm.Middleware(http.HandlerFunc(h.logout)))
+	mux.Handle("/ws", h.sm.WebSocketMiddleware(http.HandlerFunc(h.webSocket)))
+	mux.HandleFunc("/api/check-auth", h.checkAuth)
+}
+
+func (h *Handler) serveApp(w http.ResponseWriter, r *http.Request) {
+	http.ServeFile(w, r, "templates/index.html")
 }
 
 func respondJSON(w http.ResponseWriter, data any) {
