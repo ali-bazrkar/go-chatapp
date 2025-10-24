@@ -36,31 +36,73 @@ func NewHub(id uint16, name string, address string, limit int) *Hub {
 func (h *Hub) Run(dbConn *db.Database) {
 	for {
 		select {
+
 		case client := <-h.Register:
+
 			h.clients[client] = true
 			log.Printf("%v Connected — Hub Address: %v", client.username, h.address)
 
+			// sends shistory messages safely as a batch
 			messages, err := h.FetchInitialMessages(client.lastTS, dbConn)
 			if err != nil {
 				log.Printf("Hub Addr: %v — Client: %v — History Fetch Error: %v", h.address, client.username, err)
 			}
-
-			data, err := json.Marshal(messages)
-			if err != nil {
-				log.Printf("Hub Addr: %v — Marshal Error: %v", h.address, err)
+			if len(messages) > 0 {
+				data, err := json.Marshal(messages)
+				if err != nil {
+					log.Printf("Hub Addr: %v — Marshal Error: %v", h.address, err)
+				} else {
+					client.send <- data
+				}
 			}
 
-			client.send <- data
+			// broadcasts new user joining alert
+			newClient := h.getJoinedUser(client)
+			data, err := json.Marshal(newClient)
+			if err != nil {
+				log.Printf("Hub Addr: %v — Client Joining Marshal Error: %v", h.address, err)
+			} else {
+				h.broadcastMessages(data)
+			}
+
+			// broadcasts updated list of current online users
+			userList := h.getUserList()
+			data, err = json.Marshal(userList)
+			if err != nil {
+				log.Printf("Hub Addr: %v — User List Marshal Error: %v", h.address, err)
+			} else {
+				h.broadcastMessages(data)
+			}
 
 		case client := <-h.unregister:
+
 			if _, ok := h.clients[client]; ok {
 				close(client.send)
 				delete(h.clients, client)
 				log.Printf("%v Disconnected — Hub Address: %v", client.username, h.address)
 			}
 
+			// broadcasts user leaving alert
+			newClient := h.getLeftUser(client)
+			data, err := json.Marshal(newClient)
+			if err != nil {
+				log.Printf("Hub Addr: %v — Client Joining Marshal Error: %v", h.address, err)
+			} else {
+				h.broadcastMessages(data)
+			}
+
+			// broadcasts updated list of current online users
+			userList := h.getUserList()
+			data, err = json.Marshal(userList)
+			if err != nil {
+				log.Printf("Hub Addr: %v — User List Marshal Error: %v", h.address, err)
+			} else {
+				h.broadcastMessages(data)
+			}
+
 		case data := <-h.broadcast:
 
+			// sends pure message to the writer channel
 			select {
 			case dbConn.WriteQueue <- &db.Message{
 				Content:   data.Content,
@@ -72,19 +114,12 @@ func (h *Hub) Run(dbConn *db.Database) {
 				log.Printf("Hub Addr: %v — Accessing WriteQueue Failed", h.address)
 			}
 
+			// converts and broadcasts the message to online users
 			msg, err := json.Marshal(data)
 			if err != nil {
 				log.Println("Marshal Error:", err)
-				continue
-			}
-
-			for client := range h.clients {
-				select {
-				case client.send <- msg:
-				default:
-					close(client.send)
-					delete(h.clients, client)
-				}
+			} else {
+				h.broadcastMessages(msg)
 			}
 		}
 	}
@@ -104,4 +139,52 @@ func (h *Hub) FetchInitialMessages(lastTS time.Time, dbConn *db.Database) ([]*mo
 	}
 
 	return messages, nil
+}
+
+func (h *Hub) broadcastMessages(data []byte) {
+	for client := range h.clients {
+		select {
+		case client.send <- data:
+		default:
+			close(client.send)
+			delete(h.clients, client)
+		}
+	}
+}
+
+func (h *Hub) getUserList() map[string]any {
+	var users []map[string]any
+	for client := range h.clients {
+		users = append(users, map[string]any{
+			"id":       client.userID,
+			"username": client.username,
+		})
+	}
+
+	userList := map[string]any{
+		"type":  "user_list",
+		"users": users,
+	}
+
+	return userList
+}
+
+func (h *Hub) getJoinedUser(newClient *Client) map[string]any {
+	return map[string]any{
+		"type": "user_joined",
+		"user": map[string]any{
+			"id":       newClient.userID,
+			"username": newClient.username,
+		},
+	}
+}
+
+func (h *Hub) getLeftUser(client *Client) map[string]any {
+	return map[string]any{
+		"type": "user_left",
+		"user": map[string]any{
+			"id":       client.userID,
+			"username": client.username,
+		},
+	}
 }

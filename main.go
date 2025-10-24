@@ -13,6 +13,7 @@ import (
 
 func main() {
 
+	// —— database setup ——
 	var bufferSize uint16 = 1000
 
 	dbConn, err := db.Initializer("./db/database.db", bufferSize)
@@ -26,10 +27,7 @@ func main() {
 
 	go dbConn.MessageWriter()
 
-	initHub := InitializeHub("Main", "@Initialized_Main_Hub", dbConn)
-	hub := chat.NewHub(initHub.ID, initHub.Name, initHub.Address, 100) // fix
-	go hub.Run(dbConn)
-
+	// —— session management ——
 	sm := auth.NewSessionManager(dbConn)
 
 	go func() {
@@ -40,16 +38,21 @@ func main() {
 		}
 	}()
 
-	handler := handlers.NewHandler(sm, hub, dbConn)
+	// —— chat hub ——
+	initHub := InitializeHub("Main", "@Main", dbConn)
+	hub := chat.NewHub(initHub.ID, initHub.Name, initHub.Address, 100)
+	go hub.Run(dbConn)
 
+	// —— http server ——
+	handler := handlers.NewHandler(sm, hub, dbConn)
 	mux := http.NewServeMux()
 	handler.Setup(mux)
 	log.Fatal(http.ListenAndServe(":3000", mux))
 }
 
 /*
-InitializeHub() function is a temporary initializer function
-current state of project uses ONE SINGLE hub for communication
+InitializeHub() function is a temporary method, since current
+state of project uses ONE SINGLE hub for communication
 however i have designed entire code in a way it can easily
 scale to multiple hub in a possible close future.
 

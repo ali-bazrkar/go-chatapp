@@ -128,5 +128,12 @@ func (db *Database) CleanupExpiredTokens() error {
 	return db.Gorm.Where("expires_at < ?", time.Now()).Delete(&Token{}).Error
 }
 
+func (db *Database) ExtendSessionExpiration(sessionToken string, newExpiresAt time.Time) error {
+	return db.Gorm.
+		Model(&Token{}).
+		Where("session_token = ?", sessionToken).
+		Update("expires_at", newExpiresAt).Error
+}
+
 // DEV Reminder:
 // Save() updates all fields, Updates() can update specific fields
