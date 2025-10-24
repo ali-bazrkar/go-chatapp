@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/aliBazrkar/go-chatapp/auth"
 	"github.com/aliBazrkar/go-chatapp/model"
 	"github.com/gorilla/websocket"
 )
@@ -20,11 +21,12 @@ type Client struct {
 }
 
 var Upgrader = websocket.Upgrader{
-	CheckOrigin: func(r *http.Request) bool {
-		return true // TODO: in production i should put domain name here
-	},
 	ReadBufferSize:  1024 * 4,
 	WriteBufferSize: 1024 * 8,
+	CheckOrigin: func(r *http.Request) bool {
+		origin := r.Header.Get("Origin")
+		return origin == auth.Origin
+	},
 }
 
 // Reminder: in case i have decided to add image uploads

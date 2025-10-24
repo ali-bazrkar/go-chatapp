@@ -17,8 +17,7 @@ type Database struct {
 func Initializer(dbPath string, bufferSize uint16) (*Database, error) {
 
 	// remove Logger setting if SQL query logs are bothering you
-	// i left it open to see transaction flows and evaluate easier.
-
+	// i left it open to see transaction flows and debug easier.
 	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
