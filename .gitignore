@@ -1,0 +1,15 @@
+# Go
+/bin/
+/build/
+*.exe
+*.out
+
+# DB and config
+*.db
+*.sqlite
+*.env
+config.json
+
+# Editor / OS files
+.DS_Store
+*.log
