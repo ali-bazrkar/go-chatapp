@@ -6,6 +6,8 @@
 
 # DB and config
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.env
 config.json
