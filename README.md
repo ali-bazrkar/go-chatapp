@@ -20,7 +20,6 @@ This project became my practical introduction to backend engineering — learnin
 | :---: | :---: | :---: |
 |<img width="1910" height="920" alt="login!" src="https://github.com/user-attachments/assets/e8140437-3cd5-428a-8ff7-f8be8732d06e"/>| <img width="1908" height="926" alt="register" src="https://github.com/user-attachments/assets/9eacf1a7-7259-4cde-8e5a-4506dbe92eb1" /> |<img width="1920" height="912" alt="chatapp" src="https://github.com/user-attachments/assets/7ca00649-8295-40bd-818e-ddd8b2e3ec51" />|
 
----
 ## Features
 
 1. **Concurrent Communication:** Each user can send and receive messages simultaneously. The `Hub` (chatroom) synchronizes message order, broadcasts messages, and stores them in the database as they are sent.
@@ -40,7 +39,6 @@ This project became my practical introduction to backend engineering — learnin
 * **Auth:** Cookie-based session + CSRF tokens  
 * **Communication Protocol:** WebSocket
 
----
 
 ## How to Run Locally
 ### Prerequisites
@@ -75,7 +73,6 @@ go build -o go-chatapp
 5. **Open the application:**
 Open your web browser and go to `http://localhost:3000`.
 
----
 
 ## API Overview
 
@@ -116,7 +113,6 @@ go-chatapp/
 ├─ main.go # Entry point
 └─ go.mod # Dependencies
 ```
----
 
 ## Future Improvements (TODO)
 
