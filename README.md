@@ -91,8 +91,8 @@ Open your web browser and go to `http://localhost:3000`.
 ## Project Structure
 
 ```
-
 go-chatapp/
+|
 ├─ auth/ # Authentication & session management
 | ├─ middleware.go
 | ├─ session.go
@@ -115,7 +115,6 @@ go-chatapp/
 | └─ index.html
 ├─ main.go # Entry point
 └─ go.mod # Dependencies
-
 ```
 ---
 
