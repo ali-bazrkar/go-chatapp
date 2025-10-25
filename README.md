@@ -90,28 +90,28 @@ Open your web browser and go to `http://localhost:3000`.
 ```
 go-chatapp/
 |
-├─ auth/ # Authentication & session management
+├─ auth/ ​​​​​​​​    ​        ​# Authentication & session management
 | ├─ middleware.go
 | ├─ session.go
-| ├─ utils.go # password encryption & session generators
+| ├─ utils.go       ​ # password encryption & session generators
 | └─ validators.go
-├─ db/ # Database setup & queries
-| ├─ init.go # Database connection
-| ├─ models.go # GORM schema structs
-| └─ query.go # GORM CRUD functions
-├─ handlers/ # API handlers and websocket Endpoint
-| ├─ auth.go # /api/check-auth
+├─ db/              ​ # Database setup & queries
+| ├─ init.go        ​ # Database connection
+| ├─ models.go      ​ # GORM schema structs
+| └─ query.go       ​ # GORM CRUD functions
+├─ handlers/        ​ # API handlers and websocket Endpoint
+| ├─ auth.go       ​  ​# /api/check-auth
 | ├─ login.go
 | ├─ logout.go
 | ├─ register.go
-| ├─ setup.go # APIs and router setup
+| ├─ setup.go       ​ # APIs and router setup
 | └─ websocket.go
-├─ model/ # Global structs
+├─ model/           ​ # Global structs
 | └─ message.go
-├─ templates/ # Frontend files (SPA)
+├─ templates/       ​ # Frontend files (SPA)
 | └─ index.html
-├─ main.go # Entry point
-└─ go.mod # Dependencies
+├─ main.go           ​# Entry point
+└─ go.mod           ​ # Dependencies
 ```
 
 ## Future Improvements (TODO)
